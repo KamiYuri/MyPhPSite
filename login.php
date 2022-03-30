@@ -14,6 +14,7 @@
             $_SESSION["id"] = $row['id'];
             $_SESSION["username"] = $row['username'];
             $_SESSION["admin"] = $row['admin'];
+            $_SESSION["session_created_time"] = time();
         }
         else{
             $error_login = true;
