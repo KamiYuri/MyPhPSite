@@ -1,10 +1,24 @@
 <?php
     require '../session.php';
-    require 'connect.php';
+    require '../connect.php';
 
     $sql = "SELECT * FROM post";
     $result = mysqli_query($conn, $sql);
-    
+
+    if(isset($_POST["post_create_submit"])){
+        $title = $_POST['title'];
+        $content = $_POST['content'];
+        $owner_id = $_SESSION["id"];
+
+        $sql = "INSERT INTO post( title, content, owner_id ) VALUES ( '$title', '$content', '$owner_id' )";
+        
+        if (mysqli_query($conn, $sql)) {
+            $_SESSION["create_post_success"] = true;
+            header("Location:./post.php");
+        } else{
+            $_SESSION["create_post_success"] = false;
+        }
+    }
 ?>
 
 <!doctype html>
@@ -114,23 +128,32 @@
         <main>
             <div class="w-full flex flex-row mx-auto py-12 justify-center">
                 <div class="w-auto overflow-hidden px-10 py-5 bg-gray-100 shadow-lg">
-                    <div class="w-full flex flex-col select-none">
-                        <div class="w-full items-center divide-gray-300 divide-y divide-solid">
-                            <div class="w-full select-none flex flex-row justify-end space-x-4 mb-4 pr-2 items-center">
-                                <label for="title" class="w-20">Tiêu đề</label>
-                                <input name="title" id="title" type="text"
-                                        class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-xs rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 w-full">
-                                
-                            </div>
+                    <form action="./post_create.php" enctype="multipart/form-data" method="POST" class="w-full px-7 py-5 flex items-center flex-col">
+                        <div class="w-full flex flex-col select-none">
+
+                            <div class="w-full items-center divide-gray-300 divide-y divide-solid">
+                                <div
+                                    class="w-full select-none flex flex-row justify-end space-x-4 mb-4 pr-2 items-center">
+                                    <label for="title" class="w-20">Tiêu đề</label>
+                                    <input name="title" id="title" type="text"
+                                        class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-xs rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 w-full" required>
+
+                                </div>
 
 
-                            <div class="h-auto w-full flex flex-row items-center pt-4 space-x-8">
-                                <label for="content">Nội dung</label>
-                                <textarea id="message" rows="4" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500" placeholder="Leave a comment..."></textarea>
+                                <div class="h-auto w-full flex flex-row items-center pt-4 space-x-8">
+                                    <label for="content">Nội dung</label>
+                                    <textarea id="content" name="content" rows="4"
+                                        class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                                        placeholder="Leave a comment..."></textarea>
+                                </div>
+
                             </div>
 
                         </div>
-                    </div>
+                        <button type="submit" name="post_create_submit" class="w-3/6 text-white bg-emerald-700 hover:bg-emerald-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Đăng bài</button>
+
+                    </form>
                 </div>
             </div>
     </div>

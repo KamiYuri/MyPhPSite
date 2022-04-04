@@ -1,10 +1,18 @@
 <?php
     require '../session.php';
-    require 'connect.php';
+    if(!isset($_SESSION["username"])){
+        header("Location:../login.php");
+    }
 
-    $sql = "SELECT * FROM post";
+    require '../connect.php';
+
+    $sql = "SELECT post.*, user.username FROM post, user WHERE post.owner_id = user.id";
     $result = mysqli_query($conn, $sql);
-    
+
+    if($_SESSION["create_post_success"]){
+        echo '<script>alert("Đăng bài thành công.")</script>';
+        unset($_SESSION["create_post_success"]);
+    }
 ?>
 
 <!doctype html>
@@ -18,9 +26,6 @@
 </head>
 
 <body class="antialiased">
-    <?php
-    if($_SESSION["username"]) {
-?>
     <div class="min-h-screen">
         <nav class="bg-emerald-800 border-b border-gray-100 select-none">
             <!-- Primary Navigation Menu -->
@@ -91,7 +96,7 @@
                                 href="">
                                 Post
                             </a>
-                            <?php if($_SESSION['admin']) {
+                            <?php if($_SESSION['type']) {
                                 echo '<a class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium leading-5 text-white hover:text-gray-700 hover:border-gray-300 focus:outline-none focus:text-gray-700 focus:border-gray-300 transition"
                                     href="">
                                         Tài khoản
@@ -117,7 +122,7 @@
                     <div class="w-full flex flex-col select-none">
                         <div class="w-full items-center divide-gray-300 divide-y divide-solid">
                             <div class="w-full select-none flex flex-row justify-end space-x-4 mb-4 pr-2">
-                                <a href="post_create.php">
+                                <a href="./post_create.php">
                                     <button type="button"
                                         class="text-white focus:ring-4 font-medium rounded-lg text-sm px-5 py-2.5 text-center mb-2 bg-green-500 hover:bg-green-600 focus:ring-green-300 w-30">
                                         Create post
@@ -165,14 +170,17 @@
                                                         class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                                                         ID
                                                     </th>
-
                                                     <th scope="col"
                                                         class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
-                                                        Người đăng
+                                                        Tiêu đề
                                                     </th>
                                                     <th scope="col"
                                                         class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                                                         Nội dung
+                                                    </th>
+                                                    <th scope="col"
+                                                        class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
+                                                        Người đăng
                                                     </th>
                                                     <th scope="col"
                                                         class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
@@ -197,33 +205,38 @@
                                                 <tr>
                                                     <td class="px-6 py-4 whitespace-nowrap select-text">
                                                         <div class="flex items-center">
-                                                            <span class="text-sm font-medium text-gray-900 italic">
+                                                            <span class="text-sm font-medium text-gray-900">
                                                                 <?php echo $row['id'] ?>
                                                             </span>
                                                         </div>
                                                     </td>
-
-                                                    <td class="px-6 py-4 whitespace-nowrap select-text">
-                                                        <div class="flex items-center">
-                                                            <span class="text-sm font-medium text-gray-900 underline">
-                                                                <?php echo $row['owner_id'] ?>
-                                                            </span>
-                                                        </div>
+                                                    <td class="px-6 py-4 whitespace-nowrap">
+                                                        <div class="text-sm font-medium text-gray-900 truncate w-32">
+                                                            <?php echo $row['title'] ?>
+                                                        <div>
                                                     </td>
                                                     <td class="px-6 py-4 whitespace-nowrap">
-                                                        <div class="text-sm text-gray-900 italic">
+                                                        <div class="text-sm text-gray-900 italic truncate w-80">
                                                             <?php echo $row['content'] ?>
                                                         <div>
                                                     </td>
+                                                    <td class="px-6 py-4 whitespace-nowrap select-text">
+                                                        <div class="flex items-center">
+                                                            <span class="text-sm font-medium text-gray-900">
+                                                                <?php echo $row['username'] ?>
+                                                            </span>
+                                                        </div>
+                                                    </td>
+
 
                                                     <td class="px-6 py-4 whitespace-nowrap">
                                                         <div class="text-sm text-gray-500">
-                                                            <?php echo $row['created_date'] ?>
+                                                            <?php echo $row['created_time'] ?>
                                                         </div>
                                                     </td>
                                                     <td class="px-6 py-4 whitespace-nowrap">
                                                         <div class="text-sm text-gray-500">
-                                                            <?php echo $row['last_updated_date'] ? $row['last_updated_date'] : 'Không có thông tin'  ?>
+                                                            <?php echo $row['last_updated_time'] ? $row['last_updated_time'] : 'Không có thông tin'  ?>
                                                         </div>
                                                     </td>
                                                     <td class="px-6 py-4 whitespace-nowrap">
@@ -231,8 +244,8 @@
                                                             <?php
                                                                 if($row['owner_id'] == $_SESSION['id']){
                                                                     echo '
-                                                                        <a href="posts_edit.php?id='.$row['id'].'">Edit</a> |
-                                                                        <a href="posts_delete.php?id='.$row['id'].'">Delete</a>';
+                                                                        <a href="./posts_edit.php?id='.$row['id'].'">Edit</a> |
+                                                                        <a href="./posts_delete.php?id='.$row['id'].'">Delete</a>';
                                                                     }
                                                             ?>
                                                         </div>
@@ -261,10 +274,6 @@
     </div>
 
     <script src="https://unpkg.com/@themesberg/flowbite@1.2.0/dist/flowbite.bundle.js"></script>
-
-    <?php
-    }else header("Location:../login.php")
-?>
 </body>
 
 </html>

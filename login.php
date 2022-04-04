@@ -1,19 +1,19 @@
 <?php
     $error_login = false;
     require 'connect.php';
-    session_start();
     if(isset($_POST['login_submit'])){
         $username = $_POST['username'];
         $password = $_POST['password'];
 
         $query = "SELECT * FROM user WHERE username = '".$username."' AND password = '".$password."'";
-
+        var_dump($query);
         $result = mysqli_query($conn, $query);
         $row = mysqli_fetch_array($result);
         if(is_array($row)){
+            session_start();
             $_SESSION["id"] = $row['id'];
             $_SESSION["username"] = $row['username'];
-            $_SESSION["admin"] = $row['admin'];
+            $_SESSION["type"] = $row['type'];
             $_SESSION["session_created_time"] = time();
         }
         else{
@@ -67,7 +67,7 @@
         <main class="h-full bg-cover" style="background-image: url('img/login-background.jpg')">
             <div class="h-full w-auto mx-auto flex items-center justify-center">
                 <div class="w-1/3 h-auto bg-gray-100 overflow-hidden shadow-xl px-10 py-5 rounded-lg">
-                    <form action="/login.php" enctype="multipart/form-data" method="POST" class="w-full px-7 py-5 flex items-center flex-col">
+                    <form action="login.php" enctype="multipart/form-data" method="POST" class="w-full px-7 py-5 flex items-center flex-col">
                         <div class="mb-6 flex flex-row w-full">
                             <label for="username" class="w-1/3 flex justify-center items-center">
                                 Tài khoản
