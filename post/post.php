@@ -6,12 +6,34 @@
 
     require '../connect.php';
 
-    $sql = "SELECT post.*, user.username FROM post, user WHERE post.owner_id = user.id";
+    $sql = "SELECT post.*, user.username FROM post, user WHERE post.owner_id = user.id ORDER BY post.id";
     $result = mysqli_query($conn, $sql);
 
     if($_SESSION["create_post_success"]){
-        echo '<script>alert("Đăng bài thành công.")</script>';
+        echo '<script>alert("'.$_SESSION["create_post_success"].'")</script>';
         unset($_SESSION["create_post_success"]);
+    }
+
+    if($_SESSION["delete_post_success"]){
+        echo '<script>alert("'.$_SESSION["delete_post_success"].'")</script>';
+        unset($_SESSION["delete_post_success"]);
+    }
+
+    if(isset($_POST["search_btn"])){
+        $owner_id = $_POST["search_by_owner_id"];
+        $content = $_POST["search_by_content"];
+        if(!empty($content)){  //neu co content
+            if(empty($owner_id)){ //va ko co owner_id -> tim theo content
+                $query = "SELECT post.*, user.username FROM post, user WHERE post.content LIKE '%$content%' AND post.owner_id = user.id ORDER BY post.id";
+            }
+            else{ //neu co ca 2 -> tim nhung post co content trong so nhung post co cung owner_id
+                $query = "SELECT post.*, user.username FROM post, user WHERE (post.content LIKE '%$content%' AND owner_id = $owner_id) AND post.owner_id = user.id ORDER BY post.id";
+            }
+        }
+        else{ //neu ko co content, tim theo owner_id
+            $query = "SELECT post.*, user.username FROM post, user WHERE post.owner_id = $owner_id AND post.owner_id = user.id ORDER BY post.id";
+        }
+        $result = mysqli_query($conn, $query);
     }
 ?>
 
@@ -21,8 +43,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Blog</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://unpkg.com/flowbite@1.4.1/dist/flowbite.min.css" />
+    <link rel="icon" type="image/x-icon" href="/img/favicon.png">
 </head>
 
 <body class="antialiased">
@@ -93,12 +117,12 @@
                             </a> -->
 
                             <a class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium leading-5 text-white hover:text-gray-700 hover:border-gray-300 focus:outline-none focus:text-emerald-200 focus:border-gray-300 transition"
-                                href="">
+                                href="./post.php">
                                 Post
                             </a>
                             <?php if($_SESSION['type']) {
                                 echo '<a class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium leading-5 text-white hover:text-gray-700 hover:border-gray-300 focus:outline-none focus:text-gray-700 focus:border-gray-300 transition"
-                                    href="">
+                                    href="../account/account.php">
                                         Tài khoản
                                     </a>';
                                 }
@@ -107,8 +131,9 @@
 
                     </div>
                 </div>
-                <div class="flex justify-between h-16 items-center">
-                    <a href="../logout.php" class="underline text-white">Logout</a>
+                <div class="flex justify-between h-16 items-center space-x-6">
+                    <span class="text-white"><?php echo($_SESSION["username"]) ?></span>
+                    <a href="../logout.php" class="underline text-white">Đăng xuất</a>
                 </div>
             </div>
         </nav>
@@ -125,36 +150,36 @@
                                 <a href="./post_create.php">
                                     <button type="button"
                                         class="text-white focus:ring-4 font-medium rounded-lg text-sm px-5 py-2.5 text-center mb-2 bg-green-500 hover:bg-green-600 focus:ring-green-300 w-30">
-                                        Create post
+                                        Tạo bài viết
                                     </button>
                                 </a>
                             </div>
 
-
+                            <form action="./post.php" method="post">
                             <div class="h-auto w-full flex flex-row items-center pt-4 space-x-8">
-                                <div class="flex w-auto items-center justify-start space-x-6">
-                                    <label for="name">
-                                        Owner
-                                    </label>
-                                    <input name="name" id="name" type="text"
-                                        class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-xs rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2">
-                                </div>
+                                
+                                    <div class="flex w-auto items-center justify-start space-x-6">
+                                        <label for="search_by_owner_id" class="w-40">
+                                            Tìm theo ID người tạo
+                                        </label>
+                                        <input name="search_by_owner_id" id="search_by_owner_id" type="number"
+                                            class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-xs rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2">
+                                    </div>
 
-                                <div class="flex w-full items-center space-x-3 justify-start space-x-4">
-                                    <label for="id_number">
-                                        Content
-                                    </label>
-                                    <input name="id_number" id="id_number" type="text"
-                                        class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-xs rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2">
-                                </div>
-                                <div class="flex flex-row items-center">
-                                    <button type="button"
-                                        class="bg-orange-400 focus:ring-4 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-2 mb-2 text-white hover:text-white hover:bg-orange-500 focus:ring-yellow-300 w-28"
-                                        onclick="search()">
-                                        Tìm kiếm
-                                    </button>
-                                </div>
+                                    <div class="flex w-full items-center space-x-3 justify-start space-x-4">
+                                        <label for="search_by_content">
+                                            Tìm theo nội dung
+                                        </label>
+                                        <input name="search_by_content" id="search_by_content" type="text"
+                                            class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-xs rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2">
+                                    </div>
+                                    <div class="flex flex-row items-center">
+                                        <button type="submit" class="bg-orange-400 focus:ring-4 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-2 mb-2 text-white hover:text-white hover:bg-orange-500 focus:ring-yellow-300 w-28" name="search_btn">
+                                            Tìm kiếm
+                                        </button>
+                                    </div>
                             </div>
+                            </form>
 
                         </div>
 
@@ -213,12 +238,12 @@
                                                     <td class="px-6 py-4 whitespace-nowrap">
                                                         <div class="text-sm font-medium text-gray-900 truncate w-32">
                                                             <?php echo $row['title'] ?>
-                                                        <div>
+                                                            <div>
                                                     </td>
                                                     <td class="px-6 py-4 whitespace-nowrap">
                                                         <div class="text-sm text-gray-900 italic truncate w-80">
                                                             <?php echo $row['content'] ?>
-                                                        <div>
+                                                            <div>
                                                     </td>
                                                     <td class="px-6 py-4 whitespace-nowrap select-text">
                                                         <div class="flex items-center">
@@ -243,9 +268,8 @@
                                                         <div class="text-sm text-gray-500">
                                                             <?php
                                                                 if($row['owner_id'] == $_SESSION['id']){
-                                                                    echo '
-                                                                        <a href="./posts_edit.php?id='.$row['id'].'">Edit</a> |
-                                                                        <a href="./posts_delete.php?id='.$row['id'].'">Delete</a>';
+                                                                    echo '<a href="./post_edit.php?id='.$row['id'].'">Chỉnh sửa</a> |'.
+                                                                         '<a href="./post_delete.php?id='.$row['id'].'" onclick='.'"return confirm(\'Chắc chắn muốn xóa bài viết này?\');"> Xóa</a>';
                                                                     }
                                                             ?>
                                                         </div>

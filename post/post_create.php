@@ -1,5 +1,10 @@
 <?php
     require '../session.php';
+
+    if(!isset($_SESSION["username"])){
+        header("Location:../login.php");
+    }
+
     require '../connect.php';
 
     $sql = "SELECT * FROM post";
@@ -13,10 +18,11 @@
         $sql = "INSERT INTO post( title, content, owner_id ) VALUES ( '$title', '$content', '$owner_id' )";
         
         if (mysqli_query($conn, $sql)) {
-            $_SESSION["create_post_success"] = true;
+            $_SESSION["create_post_success"] = "Đăng bài viết thành công.";
+            $conn->close();
             header("Location:./post.php");
         } else{
-            $_SESSION["create_post_success"] = false;
+            $_SESSION["create_post_success"] = "Đăng bài viết thất bại.";
         }
     }
 ?>
@@ -27,8 +33,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Blog</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://unpkg.com/flowbite@1.4.1/dist/flowbite.min.css" />
+    <link rel="icon" type="image/x-icon" href="/img/favicon.png">
+
 </head>
 
 <body class="antialiased">
@@ -117,7 +126,7 @@
                     </div>
                 </div>
                 <div class="flex justify-between h-16 items-center">
-                    <a href="../logout.php" class="underline text-white">Logout</a>
+                    <a href="../logout.php" class="underline text-white">Đăng xuất</a>
                 </div>
             </div>
         </nav>
