@@ -1,9 +1,6 @@
 <?php
-    require '../session.php';
-    if(!isset($_SESSION["username"])){
-        header("Location:../login.php");
-    }
 
+    require './middleware.php';
     require '../connect.php';
 
 
@@ -15,6 +12,11 @@
         0 => "thường",
         1 => "admin"
     );
+
+    if($_SESSION["message"]){
+        echo '<script>alert("'.$_SESSION["message"].'")</script>';
+        unset($_SESSION["message"]);
+    }
 
     function account_classify($type){
         if($type == "-1"){
@@ -116,17 +118,12 @@
 
                         <!-- Navigation Links -->
                         <div class=" space-x-8 -my-px ml-10 flex">
-                            <!-- <a class="inline-flex items-center px-1 pt-1 border-b-4 border-emerald-400 text-sm font-medium leading-5 text-gray-100 focus:outline-none focus:border-emerald-700 transition"
-                                href="">
-                                Home
-                            </a> -->
-
-                            <a class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium leading-5 text-white hover:text-gray-700 hover:border-gray-300 focus:outline-none focus:text-emerald-200 focus:border-gray-300 transition"
+                            <a class="inline-flex items-center px-1 pt-1 border-b-4 border-transparent text-sm font-medium leading-5 text-white hover:text-blue-50 hover:border-blue-300 focus:outline-none focus:text-emerald-200 focus:border-gray-300 transition"
                                 href="../post/post.php">
                                 Post
                             </a>
                             <?php if($_SESSION['type']) {
-                                echo '<a class="inline-flex items-center px-1 pt-1 border-b-4 border-indigo-400 text-sm font-medium leading-5 text-gray-900 focus:outline-none focus:border-indigo-700 transition"
+                                echo '<a class="inline-flex items-center px-1 pt-1 border-b-4 border-blue-400 text-sm font-medium leading-5 text-blue-50 hover:text-blue-50 hover:border-blue-300 focus:outline-none focus:border-indigo-700 transition"
                                     href="../account/account.php">
                                         Tài khoản
                                     </a>';
@@ -136,10 +133,21 @@
 
                     </div>
                 </div>
-                <div class="flex justify-between h-16 items-center space-x-6">
-                    <span class="text-white"><?php echo($_SESSION["username"]) ?></span>
-                    <a href="../logout.php" class="underline text-white">Đăng xuất</a>
-                </div>
+
+                <li>
+                    <button id="dropdownNavbarLink" data-dropdown-toggle="dropdownNavbar" class="flex justify-between items-center py-2 pr-4 pl-3 w-full font-medium text-white border-b border-gray-100 hover:bg-gray-50 md:hover:bg-transparent md:border-0 md:hover:text-gray-100 md:p-0 md:w-auto"><?php echo($_SESSION["username"]) ?><svg class="ml-1 w-4 h-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg></button>
+                    <!-- Dropdown menu -->
+                    <div id="dropdownNavbar" class="hidden z-10 w-44 bg-white rounded divide-y divide-gray-100 shadow">
+                        <ul class="py-1 text-sm text-gray-700" aria-labelledby="dropdownLargeButton">
+                            <li>
+                                <a href="../user_setting.php" class="block py-2 px-4 hover:bg-gray-100">Cài đặt</a>
+                            </li>
+                        </ul>
+                        <div class="py-1">
+                            <a href="../logout.php" class="block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100">Đăng xuất</a>
+                        </div>
+                    </div>
+                </li>
             </div>
         </nav>
 
@@ -152,7 +160,7 @@
                     <div class="w-full flex flex-col select-none">
                         <div class="w-full items-center divide-gray-300 divide-y divide-solid">
                             <div class="w-full select-none flex flex-row justify-end space-x-4 mb-4 pr-2">
-                                <a href="./post_create.php">
+                                <a href="./account_create.php">
                                     <button type="button"
                                         class="text-white focus:ring-4 font-medium rounded-lg text-sm px-5 py-2.5 text-center mb-2 bg-green-500 hover:bg-green-600 focus:ring-green-300 w-30">
                                         Tạo tài khoản
@@ -261,11 +269,13 @@
                                                 </tr>
                                                 <?php }} else {
                                                     echo '
-                                                    <td class="px-6 py-4 whitespace-nowrap span-6">
-                                                        <div class="text-sm text-gray-500">
-                                                            Ko co thong tin
-                                                        </div>
-                                                    </td>';
+                                                    <tr>
+                                                        <td class="px-6 py-4 whitespace-nowrap" colspan="5">
+                                                            <div class="text-sm text-gray-500 flex justify-center">
+                                                                Không có thông tin.
+                                                            </div>
+                                                        </td>
+                                                    </tr>';
                                                 }
                                                 ?>
                                             </tbody>

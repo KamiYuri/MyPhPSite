@@ -1,40 +1,38 @@
 <?php
     require '../session.php';
+
     if(!isset($_SESSION["username"])){
         header("Location:../login.php");
     }
 
-    require '../connect.php';
+    require_once '../connect.php';
 
-    $sql = "SELECT post.*, user.username FROM post, user WHERE post.owner_id = user.id ORDER BY post.id";
-    $result = mysqli_query($conn, $sql);
+    $query = "SELECT post.*, user.username FROM post, user WHERE post.owner_id = user.id ORDER BY post.id";
+    $result = mysqli_query($conn, $query);
 
-    if($_SESSION["create_post_success"]){
-        echo '<script>alert("'.$_SESSION["create_post_success"].'")</script>';
-        unset($_SESSION["create_post_success"]);
+    if($_SESSION["message"]){
+        echo '<script>alert("'.$_SESSION["message"].'")</script>';
+        unset($_SESSION["message"]);
     }
 
-    if($_SESSION["delete_post_success"]){
-        echo '<script>alert("'.$_SESSION["delete_post_success"].'")</script>';
-        unset($_SESSION["delete_post_success"]);
-    }
-
-    if(isset($_POST["search_btn"])){
-        $owner_id = $_POST["search_by_owner_id"];
+    if(isset($_POST["search_post_btn"])){
+        $owner_name = $_POST["search_by_owner_name"];
         $content = $_POST["search_by_content"];
         if(!empty($content)){  //neu co content
-            if(empty($owner_id)){ //va ko co owner_id -> tim theo content
+            if(empty($owner_name)){ //va ko co owner_name -> tim theo content
                 $query = "SELECT post.*, user.username FROM post, user WHERE post.content LIKE '%$content%' AND post.owner_id = user.id ORDER BY post.id";
             }
-            else{ //neu co ca 2 -> tim nhung post co content trong so nhung post co cung owner_id
-                $query = "SELECT post.*, user.username FROM post, user WHERE (post.content LIKE '%$content%' AND owner_id = $owner_id) AND post.owner_id = user.id ORDER BY post.id";
+            else{ //neu co ca 2 -> tim nhung post co content trong so nhung post co cung owner_name
+                $query = "SELECT post.*, user.username FROM post, user WHERE (user.username LIKE '%$owner_name%' AND post.content LIKE '%$content%' ) AND post.owner_id = user.id ORDER BY post.id";
             }
         }
-        else{ //neu ko co content, tim theo owner_id
-            $query = "SELECT post.*, user.username FROM post, user WHERE post.owner_id = $owner_id AND post.owner_id = user.id ORDER BY post.id";
+        else { //neu ko co content, tim theo owner_name
+            if(!empty($owner_name)){
+                $query = "SELECT post.*, user.username FROM post, user WHERE user.username LIKE '%$owner_name%' AND post.owner_id = user.id ORDER BY post.id";
+            }
         }
         $result = mysqli_query($conn, $query);
-    }
+    }    
 ?>
 
 <!doctype html>
@@ -110,18 +108,14 @@
                         </div>
 
                         <!-- Navigation Links -->
-                        <div class=" space-x-8 -my-px ml-10 flex">
-                            <!-- <a class="inline-flex items-center px-1 pt-1 border-b-4 border-emerald-400 text-sm font-medium leading-5 text-gray-100 focus:outline-none focus:border-emerald-700 transition"
-                                href="">
-                                Home
-                            </a> -->
+                        <div class="space-x-8 -my-px ml-10 flex">
 
-                            <a class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium leading-5 text-white hover:text-gray-700 hover:border-gray-300 focus:outline-none focus:text-emerald-200 focus:border-gray-300 transition"
+                            <a class="inline-flex items-center px-1 pt-1 border-b-4 border-blue-400 text-sm font-medium leading-5 text-blue-50 hover:text-blue-50 hover:border-blue-300 focus:outline-none focus:border-indigo-700 transition"
                                 href="./post.php">
                                 Post
                             </a>
-                            <?php if($_SESSION['type']) {
-                                echo '<a class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium leading-5 text-white hover:text-gray-700 hover:border-gray-300 focus:outline-none focus:text-gray-700 focus:border-gray-300 transition"
+                            <?php if($_SESSION['type'] === '1') {
+                                echo '<a class="inline-flex items-center px-1 pt-1 border-b-4 border-transparent text-sm font-medium leading-5 text-white hover:text-blue-50 hover:border-blue-300 focus:outline-none focus:text-emerald-200 focus:border-gray-300 transition"
                                     href="../account/account.php">
                                         Tài khoản
                                     </a>';
@@ -131,10 +125,20 @@
 
                     </div>
                 </div>
-                <div class="flex justify-between h-16 items-center space-x-6">
-                    <span class="text-white"><?php echo($_SESSION["username"]) ?></span>
-                    <a href="../logout.php" class="underline text-white">Đăng xuất</a>
-                </div>
+                <li>
+                    <button id="dropdownNavbarLink" data-dropdown-toggle="dropdownNavbar" class="flex justify-between items-center py-2 pr-4 pl-3 w-full font-medium text-white border-b border-gray-100 hover:bg-gray-50 md:hover:bg-transparent md:border-0 md:hover:text-gray-100 md:p-0 md:w-auto"><?php echo($_SESSION["username"]) ?><svg class="ml-1 w-4 h-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg></button>
+                    <!-- Dropdown menu -->
+                    <div id="dropdownNavbar" class="hidden z-10 w-44 bg-white rounded divide-y divide-gray-100 shadow">
+                        <ul class="py-1 text-sm text-gray-700" aria-labelledby="dropdownLargeButton">
+                            <li>
+                                <a href="../user_setting.php" class="block py-2 px-4 hover:bg-gray-100">Cài đặt</a>
+                            </li>
+                        </ul>
+                        <div class="py-1">
+                            <a href="../logout.php" class="block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100">Đăng xuất</a>
+                        </div>
+                    </div>
+                </li>
             </div>
         </nav>
 
@@ -159,10 +163,10 @@
                             <div class="h-auto w-full flex flex-row items-center pt-4 space-x-8">
                                 
                                     <div class="flex w-auto items-center justify-start space-x-6">
-                                        <label for="search_by_owner_id" class="w-40">
-                                            Tìm theo ID người tạo
+                                        <label for="search_by_owner_name" class="w-48">
+                                            Tìm theo tên người đăng
                                         </label>
-                                        <input name="search_by_owner_id" id="search_by_owner_id" type="number"
+                                        <input name="search_by_owner_name" id="search_by_owner_name" type="text"
                                             class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-xs rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2">
                                     </div>
 
@@ -174,7 +178,7 @@
                                             class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-xs rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2">
                                     </div>
                                     <div class="flex flex-row items-center">
-                                        <button type="submit" class="bg-orange-400 focus:ring-4 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-2 mb-2 text-white hover:text-white hover:bg-orange-500 focus:ring-yellow-300 w-28" name="search_btn">
+                                        <button type="submit" class="bg-orange-400 focus:ring-4 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-2 mb-2 text-white hover:text-white hover:bg-orange-500 focus:ring-yellow-300 w-28" name="search_post_btn">
                                             Tìm kiếm
                                         </button>
                                     </div>
@@ -277,11 +281,13 @@
                                                 </tr>
                                                 <?php }} else {
                                                     echo '
-                                                    <td class="px-6 py-4 whitespace-nowrap span-6">
-                                                        <div class="text-sm text-gray-500">
-                                                            Ko co thong tin
-                                                        </div>
-                                                    </td>';
+                                                    <tr>
+                                                        <td class="px-6 py-4 whitespace-nowrap" colspan="7">
+                                                            <div class="text-sm text-gray-500 flex justify-center">
+                                                                Không có thông tin.
+                                                            </div>
+                                                        </td>
+                                                    </tr>';
                                                 }
                                                 ?>
                                             </tbody>

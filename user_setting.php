@@ -1,24 +1,23 @@
 <?php
-    require_once '../connect.php';
-    require './middleware.php';
-
-
-    if(!isset($_GET["id"])){
-        header("Location:./account.php");
+    require './session.php';
+    require_once './connect.php';
+    
+    if(!isset($_SESSION["username"])){
+        header("Location:./login.php");
     }
     
-    $id = $_GET["id"];
+    $id = $_SESSION["id"];
 
-    $sql = "SELECT * FROM user WHERE id = $id AND type = '0' ";
+    $sql = "SELECT * FROM user WHERE id = $id";
     
     $result = mysqli_query($conn, $sql);
     $row = mysqli_fetch_assoc($result);
     if(empty($row)){
-        header("Location:./account.php");
+        header("Location:./logout.php");
     }
     $error = "";
     
-    if (isset($_POST['account_edit_submit'])){
+    if (isset($_POST['user_setting_submit'])){
         $username=$_POST['username'];
         $old_password=$_POST['old_password'];
         $new_password=$_POST['new_password'];
@@ -48,7 +47,7 @@
         }
 
         $conn->close();
-        header("Location:./account.php");
+        header("Location:./post/post.php");
     }
 ?>
 
@@ -131,13 +130,13 @@
                         <!-- Navigation Links -->
                         <div class="space-x-8 -my-px ml-10 flex">
 
-                            <a class="inline-flex items-center px-1 pt-1 border-b-4 border-blue-400 text-sm font-medium leading-5 text-blue-50 hover:text-blue-50 hover:border-blue-300 focus:outline-none focus:border-indigo-700 transition"
-                                href="./post.php">
+                            <a class="inline-flex items-center px-1 pt-1 border-b-4 border-transparent text-sm font-medium leading-5 text-white hover:text-blue-50 hover:border-blue-300 focus:outline-none focus:text-emerald-200 focus:border-gray-300 transition"
+                                href="./post/post.php">
                                 Post
                             </a>
                             <?php if($_SESSION['type']) {
                                 echo '<a class="inline-flex items-center px-1 pt-1 border-b-4 border-transparent text-sm font-medium leading-5 text-white hover:text-blue-50 hover:border-blue-300 focus:outline-none focus:text-emerald-200 focus:border-gray-300 transition"
-                                    href="../account/account.php">
+                                    href="./account/account.php">
                                         Tài khoản
                                     </a>';
                                 }
@@ -152,7 +151,7 @@
                     <div id="dropdownNavbar" class="hidden z-10 w-44 bg-white rounded divide-y divide-gray-100 shadow">
                         <ul class="py-1 text-sm text-gray-700" aria-labelledby="dropdownLargeButton">
                             <li>
-                                <a href="../user_setting.php" class="block py-2 px-4 hover:bg-gray-100">Cài đặt</a>
+                                <a href="../user_setting.php?id=<?php echo $_SESSION["id"]; ?>" class="block py-2 px-4 hover:bg-gray-100">Cài đặt</a>
                             </li>
                         </ul>
                         <div class="py-1">
@@ -203,7 +202,7 @@
                             </div>
 
                         </div>
-                        <button type="submit" name="account_edit_submit" class="w-3/6 text-white bg-emerald-700 hover:bg-emerald-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Cập nhật</button>
+                        <button type="submit" name="user_setting_submit" class="w-3/6 text-white bg-emerald-700 hover:bg-emerald-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Hoàn thành</button>
 
                     </form>
                 </div>

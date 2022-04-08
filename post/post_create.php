@@ -18,12 +18,13 @@
         $sql = "INSERT INTO post( title, content, owner_id ) VALUES ( '$title', '$content', '$owner_id' )";
         
         if (mysqli_query($conn, $sql)) {
-            $_SESSION["create_post_success"] = "Đăng bài viết thành công.";
-            $conn->close();
-            header("Location:./post.php");
+            $_SESSION["message"] = "Đăng bài viết thành công.";
+
         } else{
-            $_SESSION["create_post_success"] = "Đăng bài viết thất bại.";
+            $_SESSION["message"] = "Đăng bài viết thất bại.";
         }
+        $conn->close();
+        header("Location:./post.php");
     }
 ?>
 
@@ -41,9 +42,6 @@
 </head>
 
 <body class="antialiased">
-    <?php
-    if($_SESSION["username"]) {
-?>
     <div class="min-h-screen">
         <nav class="bg-emerald-800 border-b border-gray-100 select-none">
             <!-- Primary Navigation Menu -->
@@ -104,19 +102,15 @@
                         </div>
 
                         <!-- Navigation Links -->
-                        <div class=" space-x-8 -my-px ml-10 flex">
-                            <!-- <a class="inline-flex items-center px-1 pt-1 border-b-4 border-emerald-400 text-sm font-medium leading-5 text-gray-100 focus:outline-none focus:border-emerald-700 transition"
-                                href="">
-                                Home
-                            </a> -->
+                        <div class="space-x-8 -my-px ml-10 flex">
 
-                            <a class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium leading-5 text-white hover:text-gray-700 hover:border-gray-300 focus:outline-none focus:text-emerald-200 focus:border-gray-300 transition"
-                                href="">
+                            <a class="inline-flex items-center px-1 pt-1 border-b-4 border-blue-400 text-sm font-medium leading-5 text-blue-50 hover:text-blue-50 hover:border-blue-300 focus:outline-none focus:border-indigo-700 transition"
+                                href="./post.php">
                                 Post
                             </a>
-                            <?php if($_SESSION['admin']) {
-                                echo '<a class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium leading-5 text-white hover:text-gray-700 hover:border-gray-300 focus:outline-none focus:text-gray-700 focus:border-gray-300 transition"
-                                    href="">
+                            <?php if($_SESSION['type'] === '1') {
+                                echo '<a class="inline-flex items-center px-1 pt-1 border-b-4 border-transparent text-sm font-medium leading-5 text-white hover:text-blue-50 hover:border-blue-300 focus:outline-none focus:text-emerald-200 focus:border-gray-300 transition"
+                                    href="../account/account.php">
                                         Tài khoản
                                     </a>';
                                 }
@@ -125,9 +119,28 @@
 
                     </div>
                 </div>
-                <div class="flex justify-between h-16 items-center">
-                    <a href="../logout.php" class="underline text-white">Đăng xuất</a>
-                </div>
+                <li>
+                    <button id="dropdownNavbarLink" data-dropdown-toggle="dropdownNavbar"
+                        class="flex justify-between items-center py-2 pr-4 pl-3 w-full font-medium text-white border-b border-gray-100 hover:bg-gray-50 md:hover:bg-transparent md:border-0 md:hover:text-gray-100 md:p-0 md:w-auto"><?php echo($_SESSION["username"]) ?><svg
+                            class="ml-1 w-4 h-4" fill="currentColor" viewBox="0 0 20 20"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd"
+                                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                clip-rule="evenodd"></path>
+                        </svg></button>
+                    <!-- Dropdown menu -->
+                    <div id="dropdownNavbar" class="hidden z-10 w-44 bg-white rounded divide-y divide-gray-100 shadow">
+                        <ul class="py-1 text-sm text-gray-700" aria-labelledby="dropdownLargeButton">
+                            <li>
+                                <a href="../user_setting.php" class="block py-2 px-4 hover:bg-gray-100">Cài đặt</a>
+                            </li>
+                        </ul>
+                        <div class="py-1">
+                            <a href="../logout.php" class="block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100">Đăng
+                                xuất</a>
+                        </div>
+                    </div>
+                </li>
             </div>
         </nav>
 
@@ -137,7 +150,8 @@
         <main>
             <div class="w-full flex flex-row mx-auto py-12 justify-center">
                 <div class="w-auto overflow-hidden px-10 py-5 bg-gray-100 shadow-lg">
-                    <form action="./post_create.php" enctype="multipart/form-data" method="POST" class="w-full px-7 py-5 flex items-center flex-col">
+                    <form action="./post_create.php" enctype="multipart/form-data" method="POST"
+                        class="w-full px-7 py-5 flex items-center flex-col">
                         <div class="w-full flex flex-col select-none">
 
                             <div class="w-full items-center divide-gray-300 divide-y divide-solid">
@@ -145,7 +159,8 @@
                                     class="w-full select-none flex flex-row justify-end space-x-4 mb-4 pr-2 items-center">
                                     <label for="title" class="w-20">Tiêu đề</label>
                                     <input name="title" id="title" type="text"
-                                        class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-xs rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 w-full" required>
+                                        class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-xs rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 w-full"
+                                        required>
 
                                 </div>
 
@@ -154,13 +169,15 @@
                                     <label for="content">Nội dung</label>
                                     <textarea id="content" name="content" rows="4"
                                         class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-                                        placeholder="Leave a comment..."></textarea>
+                                        placeholder=""></textarea>
                                 </div>
 
                             </div>
 
                         </div>
-                        <button type="submit" name="post_create_submit" class="w-3/6 text-white bg-emerald-700 hover:bg-emerald-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Đăng bài</button>
+                        <button type="submit" name="post_create_submit"
+                            class="w-3/6 text-white bg-emerald-700 hover:bg-emerald-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Đăng
+                            bài</button>
 
                     </form>
                 </div>
@@ -168,10 +185,6 @@
     </div>
 
     <script src="https://unpkg.com/@themesberg/flowbite@1.2.0/dist/flowbite.bundle.js"></script>
-
-    <?php
-    }else header("Location:../login.php")
-?>
 </body>
 
 </html>

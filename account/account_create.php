@@ -1,52 +1,55 @@
 <?php
-    require_once '../connect.php';
-    require './middleware.php';
+    require'./middleware.php';
 
+    require '../connect.php';
 
-    if(!isset($_GET["id"])){
-        header("Location:./account.php");
-    }
-    
-    $id = $_GET["id"];
+    //check admin privilage
+    $id = $_SESSION["id"];
+    $sql = "SELECT * FROM user WHERE id = $id AND type = '1' ";
 
-    $sql = "SELECT * FROM user WHERE id = $id AND type = '0' ";
-    
     $result = mysqli_query($conn, $sql);
     $row = mysqli_fetch_assoc($result);
     if(empty($row)){
         header("Location:./account.php");
     }
-    $error = "";
-    
-    if (isset($_POST['account_edit_submit'])){
-        $username=$_POST['username'];
-        $old_password=$_POST['old_password'];
-        $new_password=$_POST['new_password'];
-        $re_password=$_POST['re_password'];
 
-        if(!password_verify($old_password, $row["password"])){
-            $error = "Mật khẩu hiện tại không đúng.";
+    if(isset($_POST["account_create_submit"])){
+        $username = $_POST['username'];
+
+        $sql = "SELECT * FROM user WHERE username = '$username' ";
+
+        $result = mysqli_query($conn, $sql);
+        $row = mysqli_fetch_assoc($result);
+        if(!empty($row)){
+            $error = "Tên người dùng đã tồn tại.";
             echo "<meta http-equiv='refresh' content='0'>";
             echo '<script>alert("'.$error.'")</script>';
             return;
         }
 
-        if($new_password !== $re_password){
-            $error = "Mật khẩu mới không khớp.";
-            echo "<meta http-equiv='refresh' content='0'>";
-            echo '<script>alert("'.$error.'")</script>';
-            return;
+        else{
+            $password = $_POST['password'];
+            $re_password = $_POST['re_password'];
+
+            if($password !== $re_password){
+                $error = "Mật khẩu không khớp.";
+                echo "<meta http-equiv='refresh' content='0'>";
+                echo '<script>alert("'.$error.'")</script>';
+                return;
+            }
+
+            $type = $_POST["select_type"];
+
+            $password = password_hash($password, PASSWORD_DEFAULT);
+            $sql = "INSERT INTO user( username, password, type ) VALUES ( '$username', '$password', '$type' )";
         }
+        
+        if (mysqli_query($conn, $sql)) {
+            $_SESSION["message"] = "Tạo tài khoản thành công.";
 
-        $password = password_hash($new_password, PASSWORD_DEFAULT);
-        $sql = "UPDATE user SET username='$username', password='$password' WHERE id = $id";
-
-        if (mysqli_query($conn, $sql) === TRUE) {
-            $_SESSION["message"] = "Chỉnh sửa tài khoản thành công.";
         } else{
-            $_SESSION["message"] = "Chỉnh sửa tài khoản thất bại.";
+            $_SESSION["message"] = "Tạo tài khoản thất bại.";
         }
-
         $conn->close();
         header("Location:./account.php");
     }
@@ -129,14 +132,13 @@
                         </div>
 
                         <!-- Navigation Links -->
-                        <div class="space-x-8 -my-px ml-10 flex">
-
-                            <a class="inline-flex items-center px-1 pt-1 border-b-4 border-blue-400 text-sm font-medium leading-5 text-blue-50 hover:text-blue-50 hover:border-blue-300 focus:outline-none focus:border-indigo-700 transition"
-                                href="./post.php">
+                        <div class=" space-x-8 -my-px ml-10 flex">
+                            <a class="inline-flex items-center px-1 pt-1 border-b-4 border-transparent text-sm font-medium leading-5 text-white hover:text-blue-50 hover:border-blue-300 focus:outline-none focus:text-emerald-200 focus:border-gray-300 transition"
+                                href="../post/post.php">
                                 Post
                             </a>
                             <?php if($_SESSION['type']) {
-                                echo '<a class="inline-flex items-center px-1 pt-1 border-b-4 border-transparent text-sm font-medium leading-5 text-white hover:text-blue-50 hover:border-blue-300 focus:outline-none focus:text-emerald-200 focus:border-gray-300 transition"
+                                echo '<a class="inline-flex items-center px-1 pt-1 border-b-4 border-blue-400 text-sm font-medium leading-5 text-blue-50 hover:text-blue-50 hover:border-blue-300 focus:outline-none focus:border-indigo-700 transition"
                                     href="../account/account.php">
                                         Tài khoản
                                     </a>';
@@ -146,13 +148,18 @@
 
                     </div>
                 </div>
+                <!-- <div class="flex justify-between h-16 items-center space-x-6">
+                    <span class="text-white">Xin chào,</span>
+                    <a href="../logout.php" class="underline text-white">Đăng xuất</a>
+                </div> -->
+
                 <li>
                     <button id="dropdownNavbarLink" data-dropdown-toggle="dropdownNavbar" class="flex justify-between items-center py-2 pr-4 pl-3 w-full font-medium text-white border-b border-gray-100 hover:bg-gray-50 md:hover:bg-transparent md:border-0 md:hover:text-gray-100 md:p-0 md:w-auto"><?php echo($_SESSION["username"]) ?><svg class="ml-1 w-4 h-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg></button>
                     <!-- Dropdown menu -->
                     <div id="dropdownNavbar" class="hidden z-10 w-44 bg-white rounded divide-y divide-gray-100 shadow">
                         <ul class="py-1 text-sm text-gray-700" aria-labelledby="dropdownLargeButton">
                             <li>
-                                <a href="../user_setting.php" class="block py-2 px-4 hover:bg-gray-100">Cài đặt</a>
+                                <a href="./account_setting.php?id=<?php echo $_SESSION["id"]; ?>" class="block py-2 px-4 hover:bg-gray-100">Cài đặt</a>
                             </li>
                         </ul>
                         <div class="py-1">
@@ -160,6 +167,7 @@
                         </div>
                     </div>
                 </li>
+
             </div>
         </nav>
 
@@ -169,41 +177,51 @@
         <main>
             <div class="w-full flex flex-row mx-auto py-12 justify-center">
                 <div class="w-auto overflow-hidden px-10 py-5 bg-gray-100 shadow-lg">
-                    <form action="<?php echo $_SERVER["REQUEST_URI"]; ?>" enctype="multipart/form-data" method="POST" class="w-full px-7 py-5 flex items-center flex-col">
+                    <form action="./account_create.php" enctype="multipart/form-data" method="POST"
+                        class="w-full px-7 py-5 flex items-center flex-col">
                         <div class="w-full flex flex-col select-none">
 
                             <div class="w-full items-center divide-gray-300 divide-y divide-solid">
                                 <div
                                     class="w-full select-none flex flex-row justify-end space-x-4 mb-4 pr-2 items-center">
-                                    <label for="username" class="w-20">Tên tài khoản</label>
+                                    <label for="username" class="w-20">Tên người dùng</label>
                                     <input name="username" id="username" type="text"
-                                        class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-xs rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 w-full" required value="<?php echo $row["username"] ?>">
-
+                                        class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-xs rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 w-full"
+                                        required>
                                 </div>
 
-                                <div class="h-auto w-full flex flex-row items-center pt-4 space-x-8">
-                                    <label for="old_password">Mật khẩu cũ</label>
-                                    <input name="old_password" id="old_password" type="password"
-                                        class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-xs rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 w-full" required value="<?php echo $row["old_password"] ?>">
+                                <div
+                                    class="w-full select-none flex flex-row justify-end space-x-4 mb-4 pr-2 items-center">
+                                    <label for="password" class="w-20">Mật khẩu</label>
+                                    <input name="password" id="password" type="password"
+                                        class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-xs rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 w-full"
+                                        required>
                                 </div>
 
-                                <div class="h-auto w-full flex flex-row items-center pt-4 space-x-8">
-                                    <label for="new_password">Mật khẩu mới</label>
-                                    <input name="new_password" id="new_password" type="password"
-                                        class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-xs rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 w-full" required value="<?php echo $row["new_password"] ?>">
-                                </div>
-
-
-                                <div class="h-auto w-full flex flex-row items-center pt-4 space-x-8">
-                                    <label for="re_password">Nhập lại mật khẩu mới</label>
+                                <div
+                                    class="w-full select-none flex flex-row justify-end space-x-4 mb-4 pr-2 items-center">
+                                    <label for="re_password" class="w-20">Nhập lại mật khẩu</label>
                                     <input name="re_password" id="re_password" type="password"
-                                        class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-xs rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 w-full" required value="<?php echo $row["re_password"] ?>">
+                                        class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-xs rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 w-full"
+                                        required>
+                                </div>
+
+                                <div
+                                    class="w-full select-none flex flex-row justify-end space-x-4 mb-4 pr-2 items-center">
+                                    <label for="select_type" class="w-20 mt-1.5">Loại tài khoản</label>
+
+                                    <select name="select_type" id="select_type" class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-xs rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 w-full" required>
+                                        <option value="0" selected>Thường</option>
+                                        <option value="1">Admin</option>
+                                    </select>
+
                                 </div>
 
                             </div>
 
                         </div>
-                        <button type="submit" name="account_edit_submit" class="w-3/6 text-white bg-emerald-700 hover:bg-emerald-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Cập nhật</button>
+                        <button type="submit" name="account_create_submit"
+                            class="w-3/6 text-white bg-emerald-700 hover:bg-emerald-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Tạo tài khoản</button>
 
                     </form>
                 </div>

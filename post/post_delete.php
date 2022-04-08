@@ -26,10 +26,11 @@
     $sql = "DELETE FROM post WHERE id='$id'";
 
     if (mysqli_query($conn, $sql)) {
-        $_SESSION["delete_post_success"] = "Xóa bài viết thành công.";
-        $conn->close();
-        header("Location:./post.php");
+        $_SESSION["message"] = "Xóa bài viết thành công.";
+
     } else{
-        $_SESSION["create_post_success"] = "Xóa bài viết thất bại.";
+        $_SESSION["message"] = "Xóa bài viết thất bại.";
     }
+    $conn->close();
+    header("Location:./post.php");
 ?>

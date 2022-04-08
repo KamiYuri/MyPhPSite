@@ -1,16 +1,16 @@
 <?php
+    session_start();
+    require_once 'connect.php';
+
     $error_login = false;
-    require 'connect.php';
+
     if(isset($_POST['login_submit'])){
         $username = $_POST['username'];
-        $password = $_POST['password'];
+        $sql = "SELECT * FROM user WHERE username = '".$username."' ";
 
-        $query = "SELECT * FROM user WHERE username = '".$username."' AND password = '".$password."'";
-        var_dump($query);
-        $result = mysqli_query($conn, $query);
+        $result = mysqli_query($conn, $sql);
         $row = mysqli_fetch_array($result);
-        if(is_array($row)){
-            session_start();
+        if(is_array($row) && password_verify($_POST['password'], $row['password'])){
             $_SESSION["id"] = $row['id'];
             $_SESSION["username"] = $row['username'];
             $_SESSION["type"] = $row['type'];
@@ -55,9 +55,9 @@
 
                         <!-- Navigation Links -->
                         <div class="space-x-8 -my-px ml-10 flex">
-                            <a class="inline-flex items-center px-1 pt-1 border-b-2 border-emerald-400 text-sm font-medium leading-5 text-white focus:outline-none focus:border-emerald-700 transition"
+                            <a class="inline-flex items-center px-1 pt-1 border-b-4 border-blue-400 text-sm font-medium leading-5 text-blue-50 hover:text-blue-50 hover:border-blue-300 focus:outline-none focus:border-indigo-700 transition"
                                 href="">
-                                Đăng nhâp
+                                Đăng nhập
                             </a>
                         </div>
                     </div>
