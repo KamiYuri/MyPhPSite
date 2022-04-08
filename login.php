@@ -6,7 +6,7 @@
 
     if(isset($_POST['login_submit'])){
         $username = $_POST['username'];
-        $sql = "SELECT * FROM user WHERE username = '".$username."' ";
+        $sql = "SELECT * FROM user WHERE username = '".$username."' AND type != '-1' ";
 
         $result = mysqli_query($conn, $sql);
         $row = mysqli_fetch_array($result);
@@ -92,7 +92,7 @@
                                     echo '
                                     <div class="w-full flex justify-end">                        
                                         <label id="login_error" class="text-red-500 italic pr-1">
-                                            Tên đăng nhập hoặc mật khẩu không đúng.
+                                            Xảy ra lỗi khi đăng nhập.
                                         </label>
                                     </div>'
                                 ;}
