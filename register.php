@@ -1,28 +1,26 @@
 <?php
-    session_start();
     require_once 'connect.php';
 
-    $error_login = false;
+    $message = "";
+    $error_register = false;
 
-    if(isset($_POST['login_submit'])){
+    if(isset($_POST['register_submit'])){
         $username = $_POST['username'];
-        $sql = "SELECT * FROM user WHERE username = '".$username."' AND type != '-1' ";
+        $password = $_POST['password'];
+        $re_password = $_POST['re_password'];
 
-        $result = mysqli_query($conn, $sql);
-        $row = mysqli_fetch_array($result);
-        if(is_array($row) && password_verify($_POST['password'], $row['password'])){
-            $_SESSION["id"] = $row['id'];
-            $_SESSION["username"] = $row['username'];
-            $_SESSION["type"] = $row['type'];
-            $_SESSION["session_created_time"] = time();
+        if($password != $re_password){
+            $message = '<label id="message" class="text-red-500 italic pr-1">Mật khẩu không khớp.</label>';
+        } else {
+            $password = password_hash($password, PASSWORD_DEFAULT);
+            $query = "INSERT INTO user( username, password ) VALUES ( '$username', '$password');";
+
+            if($conn->query($query) === false) {
+                $message = '<label id="message" class="text-red-500 italic pr-1">Xảy ra lỗi, đăng ký thất bại.</label>';
+            } else{
+                $message = '<label id="message" class="text-green-500 italic pr-1">Đăng ký thành công.</label>';
+            }
         }
-        else{
-            $error_login = true;
-        }
-        $result->close();
-    }
-    if(isset($_SESSION["id"])) {
-        header("Location:/post/post.php");
     }
 ?>
 
@@ -55,11 +53,11 @@
 
                         <!-- Navigation Links -->
                         <div class="space-x-8 -my-px ml-10 flex">
-                            <a class="inline-flex items-center px-1 pt-1 border-b-4 border-blue-400 text-sm font-medium leading-5 text-blue-50 hover:text-blue-50 hover:border-blue-300 focus:outline-none focus:border-indigo-700 transition"
-                                href="">
+                            <a class="inline-flex items-center px-1 pt-1 border-b-4 border-transparent text-sm font-medium leading-5 text-white hover:text-blue-50 hover:border-blue-300 focus:outline-none focus:text-emerald-200 focus:border-gray-300 transition"
+                                href="/login.php">
                                 Đăng nhập
                             </a>
-                            <a class="inline-flex items-center px-1 pt-1 border-b-4 border-transparent text-sm font-medium leading-5 text-white hover:text-blue-50 hover:border-blue-300 focus:outline-none focus:text-emerald-200 focus:border-gray-300 transition"
+                            <a class="inline-flex items-center px-1 pt-1 border-b-4 border-blue-400 text-sm font-medium leading-5 text-blue-50 hover:text-blue-50 hover:border-blue-300 focus:outline-none focus:border-indigo-700 transition"
                                href="/register.php">
                                 Đăng ký
                             </a>
@@ -73,39 +71,45 @@
         <!-- Page Content -->
         <main class="h-full bg-cover" style="background-image: url('img/login-background.jpg')">
             <div class="h-full w-auto mx-auto flex items-center justify-center">
-                <div class="w-1/3 h-auto bg-gray-100 overflow-hidden shadow-xl px-10 py-5 rounded-lg">
-                    <form action="login.php" enctype="multipart/form-data" method="POST" class="w-full px-7 py-5 flex items-center flex-col">
+                <div class="w-2/5 h-auto bg-gray-100 overflow-hidden shadow-xl px-10 py-5 rounded-lg">
+                    <form action="register.php" enctype="multipart/form-data" method="POST" class="w-full px-7 py-5 flex items-center flex-col">
                         <div class="mb-6 flex flex-row w-full">
-                            <label for="username" class="w-1/3 flex justify-center items-center">
+                            <label for="username" class="w-1/3 flex justify-start items-center">
                                 Tài khoản
                             </label>
                             <input type="text" id="username" name="username"
                                 class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
                                 required="">
                         </div>
+                        <div class="mb-6 flex flex-row w-full">
+                            <label for="password" class="w-1/3 flex justify-start items-center">
+                                Mật khẩu
+                            </label>
+                            <input type="password" id="password" name="password"
+                                   class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                                   required="">
+                        </div>
                         <div class="w-full flex flex-col mb-6 space-y-3">
                             <div class="flex flex-row w-full">
-                                <label for="password" class="w-1/3 flex justify-center items-center">
-                                    Mật khẩu
+                                <label for="re_password" class="w-1/3 flex justify-start items-center">
+                                    Nhập lại mật khẩu
                                 </label>
-                                <input type="password" id="password" name="password"
+                                <input type="password" id="re_password" name="re_password"
                                     class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
                                     required="">
                             </div>
-                            <?php if($error_login){
+                            <?php if(!empty($message)){
                                     echo '
-                                    <div class="w-full flex justify-end">                        
-                                        <label id="login_error" class="text-red-500 italic pr-1">
-                                            Xảy ra lỗi khi đăng nhập.
-                                        </label>
-                                    </div>'
+                                    <div class="w-full flex justify-end">'
+                                        .$message.
+                                    '</div>'
                                 ;}
                             ?>
 
                         </div>
 
-                        <button type="submit" name="login_submit" class="w-3/6 text-white bg-emerald-700 hover:bg-emerald-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">
-                            Đăng nhập
+                        <button type="submit" name="register_submit" class="w-3/6 text-white bg-emerald-700 hover:bg-emerald-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">
+                            Đăng ký
                         </button>
                     </form>
 
