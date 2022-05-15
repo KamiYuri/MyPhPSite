@@ -2,22 +2,29 @@
     session_start();
     require_once 'connect.php';
 
+    error_reporting(E_ALL);
+    mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+    ini_set('display_errors', 1);
+
     $error_login = false;
 
     if(isset($_POST['login_submit'])){
         $username = $_POST['username'];
-        $sql = "SELECT * FROM user WHERE username = '".$username."' AND type != '-1' ";
+        $query = "SELECT * FROM user WHERE username = '".$username."' AND type != '-1' LIMIT 1";
 
-        $result = mysqli_query($conn, $sql);
-        $row = mysqli_fetch_array($result);
-        if(is_array($row) && password_verify($_POST['password'], $row['password'])){
-            $_SESSION["id"] = $row['id'];
-            $_SESSION["username"] = $row['username'];
-            $_SESSION["type"] = $row['type'];
-            $_SESSION["session_created_time"] = time();
-        }
-        else{
-            $error_login = true;
+        $result = $conn->query($query);
+
+        if($result->num_rows > 0){
+            $row = $result->fetch_assoc();
+            if(password_verify($_POST['password'], $row['password'])) {
+                $_SESSION["id"] = $row['id'];
+                $_SESSION["username"] = $row['username'];
+                $_SESSION["type"] = $row['type'];
+                $_SESSION["session_created_time"] = time();
+            }
+            else{
+                $error_login = true;
+            }
         }
         $result->close();
     }

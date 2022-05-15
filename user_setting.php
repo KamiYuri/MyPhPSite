@@ -7,16 +7,14 @@
     }
     
     $id = $_SESSION["id"];
-
-    $sql = "SELECT * FROM user WHERE id = $id";
-    
-    $result = mysqli_query($conn, $sql);
-    $row = mysqli_fetch_assoc($result);
-    if(empty($row)){
+    $query = "SELECT * FROM user WHERE id = $id LIMIT 1";
+    $result = $conn->query($query);
+    if($result->num_rows == 0){
         header("Location:./logout.php");
     }
     $error = "";
-    
+
+    $row = $result->fetch_assoc();
     if (isset($_POST['user_setting_submit'])){
         $username=$_POST['username'];
         $old_password=$_POST['old_password'];
@@ -38,9 +36,9 @@
         }
 
         $password = password_hash($new_password, PASSWORD_DEFAULT);
-        $sql = "UPDATE user SET username='$username', password='$password' WHERE id = $id";
+        $query = "UPDATE user SET username='$username', password='$password' WHERE id = $id";
 
-        if (mysqli_query($conn, $sql) === TRUE) {
+        if (mysqli_query($conn, $query) === TRUE) {
             $_SESSION["message"] = "Chỉnh sửa tài khoản thành công.";
         } else{
             $_SESSION["message"] = "Chỉnh sửa tài khoản thất bại.";
@@ -167,34 +165,44 @@
         <!-- Page Content -->
         <main>
             <div class="w-full flex flex-row mx-auto py-12 justify-center">
-                <div class="w-auto overflow-hidden px-10 py-5 bg-gray-100 shadow-lg">
+                <div class="w-auto overflow-hidden px-10 py-5 bg-gray-100 shadow-lg divide-gray-300 divide-y divide-solid space-y-8">
+                    <div class="w-full h-auto flex flex-row space-x-4">
+                        <img src="/file.php?image=<?php echo $_SESSION['id']?>.jpg" alt="" style="width: 180px; height: 180px">
+
+                        <form method="POST" action="upload.php" enctype="multipart/form-data" class="w-2/3 flex flex-col items-center space-y-8 justify-center">
+                            <input type="file" name="fileToUpload" id="fileToUpload" value="" class="max-w-xs truncate"/>
+
+                            <button type="submit" name="submit" class="w-3/6 text-white bg-emerald-700 hover:bg-emerald-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Upload</button>
+                        </form>
+                    </div>
+
                     <form action="<?php echo $_SERVER["REQUEST_URI"]; ?>" enctype="multipart/form-data" method="POST" class="w-full px-7 py-5 flex items-center flex-col">
                         <div class="w-full flex flex-col select-none">
 
                             <div class="w-full items-center divide-gray-300 divide-y divide-solid">
                                 <div
-                                    class="w-full select-none flex flex-row justify-end space-x-4 mb-4 pr-2 items-center">
-                                    <label for="username" class="w-20">Tên tài khoản</label>
+                                    class="w-full select-none flex flex-row justify-end space-x-8 mb-4 pr-2 items-center">
+                                    <label for="username" class="w-56">Tên tài khoản</label>
                                     <input name="username" id="username" type="text"
                                         class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-xs rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 w-full" required value="<?php echo $row["username"] ?>">
 
                                 </div>
 
-                                <div class="h-auto w-full flex flex-row items-center pt-4 space-x-8">
-                                    <label for="old_password">Mật khẩu cũ</label>
+                                <div class="h-auto w-full flex flex-row items-center pt-4 space-x-8 mb-4 pr-2 items-center">
+                                    <label for="old_password" class="w-56">Mật khẩu cũ</label>
                                     <input name="old_password" id="old_password" type="password"
                                         class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-xs rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 w-full" required value="<?php echo $row["old_password"] ?>">
                                 </div>
 
-                                <div class="h-auto w-full flex flex-row items-center pt-4 space-x-8">
-                                    <label for="new_password">Mật khẩu mới</label>
+                                <div class="h-auto w-full flex flex-row items-center pt-4 space-x-8 mb-4 pr-2 items-center">
+                                    <label for="new_password" class="w-56">Mật khẩu mới</label>
                                     <input name="new_password" id="new_password" type="password"
                                         class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-xs rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 w-full" required value="<?php echo $row["new_password"] ?>">
                                 </div>
 
 
-                                <div class="h-auto w-full flex flex-row items-center pt-4 space-x-8">
-                                    <label for="re_password">Nhập lại mật khẩu mới</label>
+                                <div class="h-auto w-full flex flex-row items-center pt-4 space-x-8 mb-4 pr-2 items-center">
+                                    <label for="re_password" class="w-56">Nhập lại mật khẩu mới</label>
                                     <input name="re_password" id="re_password" type="password"
                                         class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-xs rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 w-full" required value="<?php echo $row["re_password"] ?>">
                                 </div>
