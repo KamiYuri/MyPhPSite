@@ -1,5 +1,5 @@
 <?php
-    require '../session.php';
+    session_start();
 
     if(!isset($_SESSION["username"])){
         header("Location:../login.php");
@@ -7,17 +7,21 @@
 
     require_once '../connect.php';
 
+    error_reporting(E_ALL);
+    mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+    ini_set('display_errors', 1);
+
     $query = "SELECT post.*, user.username FROM post, user WHERE post.owner_id = user.id ORDER BY post.id";
     $result = mysqli_query($conn, $query);
 
-    if($_SESSION["message"]){
+    if(isset($_SESSION["message"])){
         echo '<script>alert("'.$_SESSION["message"].'")</script>';
         unset($_SESSION["message"]);
     }
 
-    if(isset($_POST["search_post_btn"])){
-        $owner_name = $_POST["search_by_owner_name"];
-        $content = $_POST["search_by_content"];
+    if (isset($_GET["search_by_owner_name"]) || isset($_GET["search_by_content"])){
+        $owner_name = $_GET["search_by_owner_name"];
+        $content = $_GET["search_by_content"];
         if(!empty($content)){  //neu co content
             if(empty($owner_name)){ //va ko co owner_name -> tim theo content
                 $query = "SELECT post.*, user.username FROM post, user WHERE post.content LIKE '%$content%' AND post.owner_id = user.id ORDER BY post.id";
@@ -150,6 +154,12 @@
                 <div class="w-auto overflow-hidden px-10 py-5 bg-gray-100 shadow-lg">
                     <div class="w-full flex flex-col select-none">
                         <div class="w-full items-center divide-gray-300 divide-y divide-solid">
+                            <div>
+                                <?php
+                                if(isset($_GET["search_by_owner_name"]) || isset($_GET["search_by_content"])) {echo "Kết quả tìm kiếm theo: ";} if(!empty($owner_name)) {echo "Tên người đăng: ".$owner_name; } if(!empty($content)) { echo " Nội dung: ".$content; }
+                                ?>
+                            </div>
+
                             <div class="w-full select-none flex flex-row justify-end space-x-4 mb-4 pr-2">
                                 <a href="./post_create.php">
                                     <button type="button"
@@ -159,7 +169,7 @@
                                 </a>
                             </div>
 
-                            <form action="./post.php" method="post">
+                            <form method="GET">
                             <div class="h-auto w-full flex flex-row items-center pt-4 space-x-8">
                                 
                                     <div class="flex w-auto items-center justify-start space-x-6">
@@ -178,7 +188,7 @@
                                             class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-xs rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2">
                                     </div>
                                     <div class="flex flex-row items-center">
-                                        <button type="submit" class="bg-orange-400 focus:ring-4 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-2 mb-2 text-white hover:text-white hover:bg-orange-500 focus:ring-yellow-300 w-28" name="search_post_btn">
+                                        <button type="submit" class="bg-orange-400 focus:ring-4 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-2 mb-2 text-white hover:text-white hover:bg-orange-500 focus:ring-yellow-300 w-28">
                                             Tìm kiếm
                                         </button>
                                     </div>

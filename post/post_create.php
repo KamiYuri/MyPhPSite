@@ -4,22 +4,19 @@
     if(!isset($_SESSION["username"])){
         header("Location:../login.php");
     }
-
     require '../connect.php';
 
-    $sql = "SELECT * FROM post";
-    $result = mysqli_query($conn, $sql);
-
     if(isset($_POST["post_create_submit"])){
+        $statement = $conn->prepare("INSERT INTO post( title, content, owner_id ) VALUES ( ?, ?, ? )");
+        $statement->bind_param("ssi", $title, $content, $owner_id);
+
+
         $title = $_POST['title'];
         $content = $_POST['content'];
         $owner_id = $_SESSION["id"];
-
-        $sql = "INSERT INTO post( title, content, owner_id ) VALUES ( '$title', '$content', '$owner_id' )";
         
-        if (mysqli_query($conn, $sql)) {
+        if ($statement->execute()) {
             $_SESSION["message"] = "Đăng bài viết thành công.";
-
         } else{
             $_SESSION["message"] = "Đăng bài viết thất bại.";
         }
