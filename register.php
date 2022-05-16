@@ -2,23 +2,29 @@
     require_once 'connect.php';
 
     $message = "";
-    $error_register = false;
 
-    if(isset($_POST['register_submit'])){
+    if(isset($_POST['register_submit'])) {
         $username = $_POST['username'];
         $password = $_POST['password'];
         $re_password = $_POST['re_password'];
 
-        if($password != $re_password){
-            $message = '<label id="message" class="text-red-500 italic pr-1">Mật khẩu không khớp.</label>';
+        if (preg_match("^[0-9A-Za-z_]+$", $password) == 0) {
+            $message = '<label id="message" class="text-red-500 italic pr-1">Tài khoản không phù hợp.</label>';
         } else {
-            $password = password_hash($password, PASSWORD_DEFAULT);
-            $query = "INSERT INTO user( username, password ) VALUES ( '$username', '$password');";
+            if ($password != $re_password) {
+                $message = '<label id="message" class="text-red-500 italic pr-1">Mật khẩu không khớp.</label>';
+            } else {
+                $password = password_hash($password, PASSWORD_DEFAULT);
 
-            if($conn->query($query) === false) {
-                $message = '<label id="message" class="text-red-500 italic pr-1">Xảy ra lỗi, đăng ký thất bại.</label>';
-            } else{
-                $message = '<label id="message" class="text-green-500 italic pr-1">Đăng ký thành công.</label>';
+                $stmt = $conn->prepare("INSERT INTO user( username, password ) VALUES ( ?, ?)");
+                $stmt->bind_param('ss', $username, $password);
+
+                if ($stmt->execute()) {
+                    $message = '<label id="message" class="text-green-500 italic pr-1">Đăng ký thành công.</label>';
+                } else {
+                    $message = '<label id="message" class="text-red-500 italic pr-1">Xảy ra lỗi, đăng ký thất bại.</label>';
+                }
+                $stmt->close();
             }
         }
     }

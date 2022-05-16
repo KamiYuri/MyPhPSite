@@ -2,21 +2,20 @@
     session_start();
     require_once 'connect.php';
 
-    error_reporting(E_ALL);
-    mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-    ini_set('display_errors', 1);
-
     $error_login = false;
 
     if(isset($_POST['login_submit'])){
-        $username = $_POST['username'];
-        $query = "SELECT * FROM user WHERE username = '".$username."' AND type != '-1' LIMIT 1";
+        $input = $_POST['username'];
 
-        $result = $conn->query($query);
+        $stmt = $conn->prepare("SELECT * FROM user WHERE username = ? AND type != '-1' LIMIT 1");
+        $stmt->bind_param('s', $input);
+        $stmt->bind_result($id, $username, $password, $type);
 
-        if($result->num_rows > 0){
+        if($stmt->execute()){
+            $result = $stmt->get_result();
             $row = $result->fetch_assoc();
-            if(password_verify($_POST['password'], $row['password'])) {
+
+            if(password_verify($_POST['password'],$row['password'])) {
                 $_SESSION["id"] = $row['id'];
                 $_SESSION["username"] = $row['username'];
                 $_SESSION["type"] = $row['type'];
@@ -26,7 +25,7 @@
                 $error_login = true;
             }
         }
-        $result->close();
+        $stmt->close();
     }
     if(isset($_SESSION["id"])) {
         header("Location:/post/post.php");

@@ -7,10 +7,6 @@
 
     require_once '../connect.php';
 
-    error_reporting(E_ALL);
-    mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-    ini_set('display_errors', 1);
-
     $query = "SELECT post.*, user.username FROM post, user WHERE post.owner_id = user.id ORDER BY post.id";
     $result = mysqli_query($conn, $query);
 
@@ -19,24 +15,38 @@
         unset($_SESSION["message"]);
     }
 
-    if (isset($_GET["search_by_owner_name"]) || isset($_GET["search_by_content"])){
-        $owner_name = $_GET["search_by_owner_name"];
-        $content = $_GET["search_by_content"];
-        if(!empty($content)){  //neu co content
-            if(empty($owner_name)){ //va ko co owner_name -> tim theo content
-                $query = "SELECT post.*, user.username FROM post, user WHERE post.content LIKE '%$content%' AND post.owner_id = user.id ORDER BY post.id";
+    if (isset($_GET["search_by_owner_name"]) || isset($_GET["search_by_content"])) {
+        $owner_name_before = $_GET["search_by_owner_name"];
+        if(!empty($owner_name_before)){
+            $owner_name = "%$owner_name_before%";
+        }
+
+        $content_before = $_GET["search_by_content"];
+        if(!empty($content_before)){
+            $content = "%$content_before%";
+        }
+
+        if (!empty($content)) {  //neu co content
+            if (empty($owner_name)) { //va ko co owner_name -> tim theo content
+                $stmt = $conn->prepare("SELECT post.*, user.username FROM post, user WHERE post.content LIKE ? AND post.owner_id = user.id ORDER BY post.id");
+                $stmt->bind_param("s", $content);
+            } else { //neu co ca 2 -> tim nhung post co content trong so nhung post co cung owner_name
+                $stmt = $conn->prepare("SELECT post.*, user.username FROM post, user WHERE (user.username LIKE ? AND post.content LIKE %?% ) AND post.owner_id = user.id ORDER BY post.id");
+                $stmt->bind_param("ss", $owner_name, $content);
             }
-            else{ //neu co ca 2 -> tim nhung post co content trong so nhung post co cung owner_name
-                $query = "SELECT post.*, user.username FROM post, user WHERE (user.username LIKE '%$owner_name%' AND post.content LIKE '%$content%' ) AND post.owner_id = user.id ORDER BY post.id";
+        } else { //neu ko co content, tim theo owner_name
+            if (!empty($owner_name)) {
+                $stmt = $conn->prepare("SELECT post.*, user.username FROM post, user WHERE user.username LIKE ? AND post.owner_id = user.id ORDER BY post.id");
+                $stmt->bind_param("s", $owner_name);
             }
         }
-        else { //neu ko co content, tim theo owner_name
-            if(!empty($owner_name)){
-                $query = "SELECT post.*, user.username FROM post, user WHERE user.username LIKE '%$owner_name%' AND post.owner_id = user.id ORDER BY post.id";
-            }
+
+        if ($stmt->execute()) {
+            $result = $stmt->get_result();
+            $row = $result->fetch_assoc();
         }
-        $result = mysqli_query($conn, $query);
-    }    
+        $stmt->close();
+    }
 ?>
 
 <!doctype html>
@@ -156,7 +166,7 @@
                         <div class="w-full items-center divide-gray-300 divide-y divide-solid">
                             <div>
                                 <?php
-                                if(isset($_GET["search_by_owner_name"]) || isset($_GET["search_by_content"])) {echo "Kết quả tìm kiếm theo: ";} if(!empty($owner_name)) {echo "Tên người đăng: ".$owner_name; } if(!empty($content)) { echo " Nội dung: ".$content; }
+                                if(isset($_GET["search_by_owner_name"]) || isset($_GET["search_by_content"])) {echo "Kết quả tìm kiếm theo: ";} if(!empty($owner_name_before)) {echo "Tên người đăng: ".$owner_name_before; } if(!empty($content_before)) { echo " Nội dung: ".$content_before; }
                                 ?>
                             </div>
 
@@ -237,9 +247,9 @@
                                             </thead>
 
                                             <tbody class="bg-white divide-y divide-gray-200">
-                                                <?php 
-                                                    if (mysqli_num_rows($result) > 0) {
-                                                        while ($row = mysqli_fetch_assoc($result)){
+                                                <?php
+                                                    if($result->num_rows > 0){
+                                                        while ($row = $result->fetch_assoc()){
                                                 ?>
                                                 <tr>
                                                     <td class="px-6 py-4 whitespace-nowrap select-text">
@@ -256,7 +266,7 @@
                                                     </td>
                                                     <td class="px-6 py-4 whitespace-nowrap">
                                                         <div class="text-sm text-gray-900 italic truncate w-80">
-                                                            <?php echo $row['content'] ?>
+                                                            <?php echo htmlspecialchars($row['content'], ENT_QUOTES, 'UTF-8');?>
                                                             <div>
                                                     </td>
                                                     <td class="px-6 py-4 whitespace-nowrap select-text">
