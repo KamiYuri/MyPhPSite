@@ -3,10 +3,6 @@
     require './middleware.php';
     require '../connect.php';
 
-    error_reporting(E_ALL);
-    mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-    ini_set('display_errors', 1);
-
     $query = "SELECT * FROM user ORDER BY user.id";
     $result = mysqli_query($conn, $query);
 
